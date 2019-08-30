@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from flask import render_template, session, redirect, url_for, flash, request
 
@@ -6,6 +5,7 @@ from . import main
 from .forms import NameForm
 from .. import db
 from ..models import User, Role
+
 
 @main.route("/", methods=["POST", "GET"])
 def index():
@@ -20,7 +20,7 @@ def index():
 		user = User.query.filter_by(username=form.name.data).first()
 		if user is None:
 			user = User(username=form.name.data,
-						role=Role.query.filter_by(name=form.role.data).first())
+			            role=Role.query.filter_by(name=form.role.data).first())
 			db.session.add(user)
 			db.session.commit()
 			session["known"] = False
