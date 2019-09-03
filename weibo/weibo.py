@@ -1,4 +1,3 @@
-
 from datetime import datetime
 
 from flask import Flask, render_template, redirect, url_for, session, flash
@@ -10,15 +9,24 @@ from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
 from flask_script import Shell, Manager
 from flask_migrate import Migrate, MigrateCommand
-
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "hard to guess string"
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:admin@123@localhost/dev_weibo"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
+app.config["MAIL_SERVER"] = "smtp.163.com"
+app.config["MAIL_PORT"] = 25
+app.config["MAIL_USER_TLS"] = True
+app.config["MAIL_USERNAME"] = "flask@163.com"
+app.config["MAIL_PASSWORD"] = "password"
+app.config["FLASKY_MAIL_SUBJECT_PREFIX"] = "[FLASKY]"
+app.config["FLASKY_MAIL_SENDER"] = "Flasky Admin <flask@163.com>"
+app.config["FLASKY_ADMIN"] = "example@qq.com"
 
 bootstrap = Bootstrap(app)
 moment = Moment(app)
+mail = Mail(app)
 db = SQLAlchemy(app)
 manager = Manager(app)
 migrate = Migrate(app, db)
@@ -49,7 +57,7 @@ class User(db.Model):
 @app.route("/", methods=["POST", "GET"])
 def index():
 	form = NameForm()
-	form.role.choices = [(role.name,)*2 for role in Role.query.all()]
+	form.role.choices = [(role.name,) * 2 for role in Role.query.all()]
 	if form.validate_on_submit():
 		old_name = session.get("name")
 		if old_name is not None and old_name != form.username.data:
@@ -61,6 +69,8 @@ def index():
 			db.session.add(user)
 			db.session.commit()
 			session["Known"] = False
+			if app.config["FLASKY_ADMIN"]:
+				send_mail(app.config["FLASKY_ADMIN"], "New User", "mail/new_user", user=user)
 		else:
 			session["Known"] = True
 		session["name"] = form.username.data
@@ -85,6 +95,15 @@ def server_error(e):
 
 def make_shell_context():
 	return dict(app=app, db=db, Role=Role, User=User)
+
+
+def send_mail(to, subject, template, **kwargs):
+	msg = Message(app.config["FLASKY_MAIL_SUBJECT_PREFIX"] + subject,
+	              sender=app.config["FLASKY_MAIL_SENDER"],
+	              recipients=[to])
+	msg.body = render_template(template + ".txt", **kwargs)
+	msg.html = render_template(template + ".html", **kwargs)
+	mail.send(msg)
 
 
 if __name__ == "__main__":
