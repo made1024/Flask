@@ -8,6 +8,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
+from flask_script import Shell, Manager
+from flask_migrate import Migrate, MigrateCommand
 
 
 app = Flask(__name__)
@@ -18,6 +20,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 db = SQLAlchemy(app)
+manager = Manager(app)
+migrate = Migrate(app, db)
 
 
 class NameForm(FlaskForm):
@@ -56,13 +60,17 @@ def index():
 			            role=Role.query.filter_by(name=form.role.data).first())
 			db.session.add(user)
 			db.session.commit()
+			session["Known"] = False
+		else:
+			session["Known"] = True
 		session["name"] = form.username.data
 		form.username.data = ""
 		return redirect(url_for("index"))
 	return render_template("index.html",
 	                       current_time=datetime.utcnow(),
 	                       form=form,
-	                       name=session.get("name"))
+	                       name=session.get("name"),
+	                       known=session.get("Known"))
 
 
 @app.errorhandler(404)
@@ -75,13 +83,11 @@ def server_error(e):
 	return render_template("500.html"), 500
 
 
+def make_shell_context():
+	return dict(app=app, db=db, Role=Role, User=User)
+
+
 if __name__ == "__main__":
-	# db.drop_all()
-	# db.create_all()
-	# role_admin = Role(name="Admin")
-	# role_guest = Role(name="Guest")
-	# user_john = User(username="John", role=role_admin)
-	# user_susan = User(username="Susan", role=role_guest)
-	# db.session.add_all([role_admin, role_guest, user_john, user_susan])
-	# db.session.commit()
-	app.run(debug=True)
+	manager.add_command("shell", Shell(make_context=make_shell_context))
+	manager.add_command("db", MigrateCommand)
+	manager.run()
