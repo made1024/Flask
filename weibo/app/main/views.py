@@ -13,7 +13,7 @@ from ..email import send_mail
 @main.route("/", methods=["POST", "GET"])
 def index():
 	form = NameForm()
-	form.role.choices = [(role.name,)*2 for role in Role.query.all()]
+	# form.role.choices = [(role.name,)*2 for role in Role.query.all()]
 	if form.validate_on_submit():
 		# 如果新登录的用户与session中保存的用户不同时，给出提示信息
 		old_name = session.get("name")
@@ -23,8 +23,9 @@ def index():
 		# 如果是新用户，则在数据库中添加该用户
 		user = User.query.filter_by(username=form.username.data).first()
 		if user is None:
-			user = User(username=form.username.data,
-			            role=Role.query.filter_by(name=form.role.data).first())
+			# user = User(username=form.username.data,
+			#             role=Role.query.filter_by(name=form.role.data).first())
+			user = User(username=form.username.data)
 			db.session.add(user)
 			db.session.commit()
 			session["Known"] = False
