@@ -37,12 +37,11 @@ def create_app(config_name):
 	db.init_app(app)
 	login_manager.init_app(app)
 
-	# 动态加载蓝图并注册到app中
-	from .main import main as main_blueprint
-	app.register_blueprint(main_blueprint)
-
 	# 添加认证蓝图并注册到app中
+	from .main import main as main_blueprint
 	from .auth import auth as auth_blueprint
+
+	app.register_blueprint(main_blueprint)
 	app.register_blueprint(auth_blueprint, url_prefix="/auth")
 
 	return app

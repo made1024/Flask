@@ -114,7 +114,7 @@ def change_password():
 @auth.route("/reset/", methods=["POST", "GET"])
 def reset_password_request():
 	if not current_user.is_anonymous:
-		return redirect(url_for("auth.login"))
+		return redirect(url_for("main.index"))
 	form = ResetPasswordRequestForm()
 	if form.validate_on_submit():
 		user = User.query.filter_by(email=form.email.data).first()
@@ -124,22 +124,22 @@ def reset_password_request():
 		          "/auth/email/reset_password", user=user, token=token)
 			flash("A reset password email has been sent to your email.")
 			return redirect(url_for("auth.login"))
+		flash("User not exists.")
 	return render_template("auth/reset_password.html", form=form)
 
 
 @auth.route("/reset/<token>", methods=["POST", "GET"])
 def reset_password(token):
 	if not current_user.is_anonymous:
-		return redirect("auth.login")
+		return redirect("main.index")
 	form = ResetPasswordForm()
 	if form.validate_on_submit():
 		if User.reset_password(token, form.new_password.data):
 			db.session.commit()
 			flash('Your password has been updated.')
-			return redirect(url_for('auth.login'))
 		else:
 			flash("Reset your password failed.")
-			return redirect(url_for('auth.login'))
+		return redirect(url_for('auth.login'))
 	return render_template('auth/reset_password.html', form=form)
 
 
