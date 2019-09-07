@@ -1,7 +1,7 @@
 import unittest
 import time
 
-from app.models import User
+from app.models import User, Permission, Role, AnonymousUser
 from app import db, create_app
 
 
@@ -12,6 +12,7 @@ class MyTestCase(unittest.TestCase):
 		self.app_context = self.app.app_context()
 		self.app_context.push()
 		db.create_all()
+		Role.insert_roles()
 
 	def tearDown(self) -> None:
 		db.session.remove()
@@ -114,6 +115,42 @@ class MyTestCase(unittest.TestCase):
 		self.assertFalse(user2.change_email(token))
 		self.assertFalse(user2.email == "john@163.com")
 		self.assertTrue(user2.email == "marchy@163.com")
+
+	def test_user_role(self):
+		u = User(email="john@163.com", password="cat")
+		self.assertTrue(u.can(Permission.FOLLOW))
+		self.assertTrue(u.can(Permission.COMMENT))
+		self.assertTrue(u.can(Permission.WRITE_ARTICALES))
+		self.assertFalse(u.can(Permission.MODERATE_COMMENTS))
+		self.assertFalse(u.can(Permission.ADMINISTRATOR))
+		self.assertFalse(u.is_administrator)
+
+	def test_moderater_role(self):
+		u = User(email="tom@163.com", password="dog", role=Role.query.filter_by(name="Moderator").first())
+		self.assertTrue(u.can(Permission.FOLLOW))
+		self.assertTrue(u.can(Permission.COMMENT))
+		self.assertTrue(u.can(Permission.WRITE_ARTICALES))
+		self.assertTrue(u.can(Permission.MODERATE_COMMENTS))
+		self.assertFalse(u.can(Permission.ADMINISTRATOR))
+		self.assertFalse(u.is_administrator)
+
+	def test_administrator_role(self):
+		u = User(email="jack@163.com", password="mouse", role=Role.query.filter_by(name="Administrator").first())
+		self.assertTrue(u.can(Permission.FOLLOW))
+		self.assertTrue(u.can(Permission.COMMENT))
+		self.assertTrue(u.can(Permission.WRITE_ARTICALES))
+		self.assertTrue(u.can(Permission.MODERATE_COMMENTS))
+		self.assertTrue(u.can(Permission.ADMINISTRATOR))
+		self.assertTrue(u.is_administrator)
+
+	def test_anonymoususer_role(self):
+		u = AnonymousUser()
+		self.assertFalse(u.can(Permission.FOLLOW))
+		self.assertFalse(u.can(Permission.COMMENT))
+		self.assertFalse(u.can(Permission.WRITE_ARTICALES))
+		self.assertFalse(u.can(Permission.MODERATE_COMMENTS))
+		self.assertFalse(u.can(Permission.ADMINISTRATOR))
+		self.assertFalse(u.is_administrator)
 
 
 if __name__ == '__main__':
