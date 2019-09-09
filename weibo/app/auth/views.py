@@ -64,7 +64,7 @@ def register():
 def confirm(token):
 	if current_user.confirmed:
 		return redirect(url_for("main.index"))
-	if current_user.confirm(token):
+	elif current_user.confirm(token):
 		flash("You have confirmed, Thanks!")
 		return redirect(url_for("main.index"))
 	else:
@@ -74,11 +74,12 @@ def confirm(token):
 
 @auth.before_app_request
 def before_request():
-	if (current_user.is_authenticated
-		and not current_user.confirmed
-		and request.endpoint[:5] != "auth."
-		and request.endpoint != "static"):
-		return redirect(url_for("auth.unconfirmed"))
+	if current_user.is_authenticated:
+		current_user.ping()
+		if (not current_user.confirmed
+			and request.endpoint[:5] != "auth."
+			and request.endpoint != "static"):
+			return redirect(url_for("auth.unconfirmed"))
 
 
 @auth.route("/unconfirmed/")

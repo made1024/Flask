@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block page_content %}
+    <div class="page-header">
+        <img src="{{ user.gravatar(size=256) }}" alt="" class="img-rounded profile-thumbnail">
+    <div class="profile-header">
+        <h1>{{ user.username }}</h1>
+    {% if user.name or user.location %}
+    <p>
+        {% if user.name %}Name: {{ user.name }}{% endif %}<br>
+        {% if user.location %}
+            From: <a href="https://map.baidu.com/search/{{ user.location }}">
+            {{ user.location }}</a>
+        {% endif %}
+    </p>
+    {% endif %}
+    {% if current_user.is_administrator %}
+    <p><a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
+    {% endif %}
+    {% if user.about_me %}
+    <p>{{ user.about_me }}</p>
+    {% endif %}
+    <p>
+        Member Since {{ moment(user.member_since).format("L") }}.
+        <br>
+        Last Since {{ moment(user.last_since).fromNow() }}.
+    </p>
+    {% if user == current_user %}
+    <a href="{{ url_for('main.edit_profile') }}" class="btn btn-default">Edit Profile</a>
+    {% endif %}
+    {% if current_user.is_administrator %}
+        <a href="{{ url_for('main.edit_profile_admin', id=user.id) }}" class="btn-default btn">Edit Profile [Admin]</a>
+    {% endif %}</div>
+    </div>
+    <h3>Posts by {{ user.username }}</h3>
+    {% include '_posts.html' %}
+    {% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, 'main.user', username=user.username) }}
+</div>
+{% endif %}
+{% endblock %}

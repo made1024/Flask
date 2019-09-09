@@ -7,6 +7,7 @@ from flask_moment import Moment
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_pagedown import PageDown
 
 from config import config
 
@@ -15,6 +16,7 @@ bootstrap = Bootstrap()
 moment = Moment()
 mail = Mail()
 db = SQLAlchemy()
+page_down = PageDown()
 login_manager = LoginManager()
 login_manager.session_protection = "strong"
 login_manager.login_view = "auth.login"
@@ -35,6 +37,7 @@ def create_app(config_name):
 	moment.init_app(app)
 	mail.init_app(app)
 	db.init_app(app)
+	page_down.init_app(app)
 	login_manager.init_app(app)
 
 	# 添加认证蓝图并注册到app中
