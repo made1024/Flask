@@ -28,7 +28,13 @@
                 {% endif %}
                 <a href="{{ url_for('main.post', id=post.id) }}">
                 <span class="label label-default">Permalink</span>
-            </a></div>
+                </a>
+                <a href="{{ url_for('main.post', id=post.id) }}#comments">
+                    <span class="label label-primary">
+                        {{ post.comments.count() }} Comments
+                    </span>
+                </a>
+            </div>
         </div>
     </li>
     {% endfor %}
